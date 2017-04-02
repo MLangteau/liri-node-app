@@ -1,3 +1,5 @@
+// file fs later
+
 console.log('this is loaded');
 
 exports.twitterKeys = {
@@ -6,3 +8,5 @@ exports.twitterKeys = {
   access_token_key: '847575147611475968-yIs5FGEjUxrCcHFqyzA92OkWoVYG8pw',
   access_token_secret: 'fl4QOIBcLTEK0h2kgPwP5QIW1Fuc4V4NUlAirDtlVoVbj',
 }
+
+// fs write...random.txt
