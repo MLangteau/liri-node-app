@@ -256,7 +256,7 @@ function getSongInfo() {
 function movies() {
 	console.log("in movies function");
 
-  if ((process.argv[3])) {
+  if (process.argv[3]) { 
      console.log("queryStr is populated.");
     // Take in the command line arguments
     var nodeArgs = process.argv;
@@ -270,8 +270,7 @@ function movies() {
       queryStr = queryStr + " " + nodeArgs[i];
     }
 //    console.log("queryStr: **********" + queryStr + " **********");
-
-    // Then run a request to the OMDB API with the movie specified
+// Then run a request to the OMDB API with the movie specified
     request("http://www.omdbapi.com/?t=" + queryStr + "&y=&plot=short&r=json", function(error, response, body) {
       if (!error && response.statusCode === 200) {
  //      console.log("THIS IS THE (body): ", JSON.parse(body));
@@ -302,13 +301,45 @@ function movies() {
 //        .
         // * Rotten Tomatoes URL
 //        .
-      } // end of if queryStr is okay
+      } // end of if 
       else 
       {
         console.log("Movie not found or not entered. ");
-        return;
+        queryStr = "Mr Nobody";
+        request("http://www.omdbapi.com/?t=" + queryStr + "&y=&plot=short&r=json", function(error, response, body) {
+            if (!error && response.statusCode === 200) {
+
+              writeStuff = "\nThe following is about the movie you chose: ";
+              writeToLogAndConsole(writeStuff);
+              // * Title of the movie.
+              writeStuff = " Title: " + JSON.parse(body).Title + delimiterWrite;
+              writeToLogAndConsole(writeStuff);
+              // * Year the movie came out.
+              writeStuff = " Year: " + JSON.parse(body).Year + delimiterWrite;
+              writeToLogAndConsole(writeStuff);
+              // * IMDB Rating of the movie.
+              writeStuff = " Rating: " + JSON.parse(body).Ratings[0].Value + delimiterWrite;
+              writeToLogAndConsole(writeStuff);
+              // * Country where the movie was produced.
+              writeStuff = " Country: " + JSON.parse(body).Country + delimiterWrite;
+              writeToLogAndConsole(writeStuff);
+              // * Language of the movie.
+              writeStuff = " Language: " + JSON.parse(body).Language + delimiterWrite;
+              writeToLogAndConsole(writeStuff);
+              // * Plot of the movie.
+              writeStuff = " Plot: " + JSON.parse(body).Plot + delimiterWrite;
+              writeToLogAndConsole(writeStuff);
+              // * Actors in the movie.
+              writeStuff = " Actors: " + JSON.parse(body).Actors + delimiterWrite;
+              writeToLogAndConsole(writeStuff);
+              // * Rotten Tomatoes Rating.
+      //        .
+              // * Rotten Tomatoes URL
+      //        .
+            } // end of if
+          }) // end of one of the request functions
       }  // end of else 
-    })  // end of request function
+    })  // end of one of the request functions
   }  // end of if process.argv[3] ... if moveName is populated
   else {
     console.log('Error occurred in searching for movie: ' + queryStr);
