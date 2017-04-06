@@ -2,112 +2,98 @@
 var keys = require('./keys.js');  // must be same as file with stuff
 //console.log(keys.twitterKeys);
 
+//spotify-this-song,"I Want it That Way" in random.txt
+
+// try other variations of above for other commands
+// movie-this,"Star Wars", etc.
+
 var fs = require("fs");
 
 var request = require("request");
 var Twitter = require('twitter');
 var spotify = require('spotify');
 
-// Take two arguments.
-var action = process.argv[2];
-var value = process.argv[3];
+var maxNumOfSongs = 5;
 
-var valueToDo = "";
-var actionToDo = "";
+// Take two arguments.
+var command = process.argv[2];
+//var value = process.argv[3];
+
+process.argv.shift();  // skip node.exe
+process.argv.shift();  // skip name of js file
+process.argv.shift();  // skip action
+
+console.log(process.argv.join(" "));
+
+movieOrSongStr = process.argv.join(" ");
+
+console.log("command: " + command);
+console.log("movieOrSongStr: " + movieOrSongStr);
+
+//var valueToDo = "";
+//var actionToDo = "";
 var dataOne = [];
 var delimiterOne = ",";
 var delimiterWrite = " ; ";
-var readingFromFile = false;
-var queryStr = "";
-var queryString = "";
+//var readingFromFile = false;
+//var queryStr = "";
+//var queryString = "";
 
-console.log("King 0");
-//decideSwitch(actionToDo, valueToDo);
-//decideSwitch();
-console.log("King 1");
+decideSwitch(command, movieOrSongStr);
+//console.log("King 1");
 
-//function decideSwitch(action, value){
-//function decideSwitch(){  
 console.log("Here: first");
 
-if ((action == "do-what-it-says") || (action == "do")) {
-    console.log("Previsit doWhat");
-    readingFromFile = true;
-    console.log("below reset to true");
-//    readRandom(actionToDo, valueToDo);
-    fs.readFile("random.txt", "utf8", function(error, data) {
-      console.log(" reading random.txt ");
-     // readingFromFile = true;
-      // If there was an error reading the file, we log it and return immediately
-      //var delimiter = ",";
-      if (error) throw error;
-      //data = data.split(delimiter);
-      console.log("data: ", data);
-      dataOne = data.split(delimiterOne);
-      console.log("dataOne: ", dataOne);
+function decideSwitch(action, value) {
+    console.log("inside decideSwitch");
+    console.log("***action: " + action);
+    console.log("***value: " + value);
 
-  //    console.log(" dataOne[0]/action: " + dataOne[0]);
-  //    console.log(" dataOne[1]/value: " + dataOne[1]);
-      var actionToDo = dataOne[0];
-      var valueToDo = dataOne[1];
+    switch (action) {
+      case "help":
+      case "h":
+        console.log("type one of the following commands:\n node liri.js my-tweets \n node liri.js spotify-this-song '<song name here>' \n node liri.js movie-this '<movie name here>'  \n node liri.js do-what-it-says");
+        console.log("or one of the following commands:\n node liri.js tw \n node liri.js sp '<song name here>' \n node liri.js mo '<movie name here>'  \n node liri.js do");
+        break;
 
-      console.log("DO actionToDo: " + actionToDo);
-      console.log("DO valueToDo: " + valueToDo);
-   
-      value = valueToDo;
-      action = actionToDo;
+      case "my-tweets":
+      case "tw":
+      case "my":
+        console.log("Switch my-tweet");
+        tweet();
+        break;
 
-  }) // end of readFile
-}  // end of if
-else {
-    console.log("Not a do");
-    readingFromFile = false;
-    console.log("below reset to false");
-    console.log("action: " + action);
-    console.log("value: " + value);
-}
+      case "spotify-this-song":
+      case "song":
+      case "sp":
+        console.log("Switch spotify");
+        if (typeof value === 'string') {
+          spot(value);
+        } else {
+          throw new Error("must have a song choice after spotify-this-song.\ntype 'node liri.js help' for additional help. ");
+        }
+        break;
 
-console.log("getting switched");
-console.log("***action: " + action);
-console.log("***value: " + value);
+      case "movie-this":
+      case "mo":
+        console.log("Switch movie-this");
+        if (typeof value === 'string') {
+          movies(value);
+        } else {
+          throw new Error("must have a song choice after movie-this.\ntype 'node liri.js help' for additional help. ");
+        }
+        break;
 
-switch (action) {
-  case "help":
-  case "h":
-    console.log("type one of the following commands:\n node liri.js my-tweets \n node liri.js spotify-this-song '<song name here>' \n node liri.js movie-this '<movie name here>'  \n node liri.js do-what-it-says");
-    console.log("or one of the following commands:\n node liri.js tw \n node liri.js sp '<song name here>' \n node liri.js mo '<movie name here>'  \n node liri.js do");
-    break;
-
-  case "my-tweets":
-  case "tw":
-  case "my":
-    console.log("Switch my-tweet");
-    tweet();
-    break;
-
-  case "spotify-this-song":
-  case "song":
-  case "sp":
-    console.log("Switch spotify");
-    spot();
-    break;
-
-  case "movie-this":
-  case "mo":
-    console.log("Switch movie-this");
-    movies();
-    break;
-
-//  case "do-what-it-says":
-//  case "do":
-//    console.log("Going to doWhat");
-//    doWhat();
-//    readingFromFile = false;
-//    console.log("below reset to false");
-//    break;
- }
-// return;
-//} // end of decideSwitch function
+      case "do-what-it-says":
+      case "do":
+        console.log("Going to read random file function.");
+        readRandom();
+//        readingFromFile = false;
+  //      console.log("below reset to false");
+        break;
+     }  // end of switch (action)
+     return;
+}; // end of decideSwitch function
 
 function tweet() {
 	
@@ -124,240 +110,184 @@ function tweet() {
     else {
       newTweetslength = tweets.length;  
     }
-    writeStuff = "\nThese are in Latest tweets first order: ";
-    writeToLogAndConsole(writeStuff);
+    initialTweetLabel = "\nThese are in Latest tweets first order: ";
+    writeToLogAndConsole(initialTweetLabel);
     for (var i=0; i<tweets.length; i++){
-      writeStuff = "Tweets: " + tweets[i].created_at + " " + tweets[i].text + delimiterWrite;
-      writeToLogAndConsole(writeStuff);
+      tweetInfo = "\nTweets: " + tweets[i].created_at + " " + tweets[i].text + delimiterWrite;
+      writeToLogAndConsole(tweetInfo);
     }
   }
   else {
-    console.log("error in finding tweet!!!!!!!!!!!!")
+    console.log("error in finding tweet!!!!!!!!!!!!");
   } 
   return;
   });  // end of client.get
   return;
 }; // end of tweet function
 
-/*function populateValue(queryStr, queryString) {
+function spot(songChoice) {
 
-  // moved the lines that were previously here
-
-  console.log("queryStr populated: " + queryStr);
-  console.log("queryString populated: " + queryString);
-
-  return queryStr;
-}  // end of populateValue
-*/
-function spot() {
-
-	console.log("in spot function");
-
-  console.log("readingFromFile? " + readingFromFile);
-  if (!readingFromFile) {
-    console.log("prepopulate spot");
+// console.log("readingFromFile? " + readingFromFile);
+ // if (!readingFromFile) {
+ //   console.log("prepopulate spot");
    // populateValue(queryStr, queryString);
 
-    if (process.argv[3]) {
-    //   console.log("queryStr is populated.");
-    // Take in the command line arguments
-    console.log("going to populate.")
-    var nodeArgs = process.argv;
-
-    // Create an empty string for holding the queryStr
-    var queryStr = "";
-
-    // Capture all the words in the queryStr (ignoring 1st three arguments)
-    for (var i = 3; i < nodeArgs.length; i++) {
-      // Build a string with the queryStr
-      queryStr = queryStr + " " + nodeArgs[i];
-    }
-  }
-  console.log("queryStr populated NOW******: " + queryStr);
-  console.log("regular spot");
-  }
-  else {
-    console.log("actionToDo and valueToDo" + actionToDo + " " + valueToDo);
-    queryStr = valueToDo;
-  }
-
-    console.log("queryStr: **********" + queryStr + " **********");
+    console.log("songChoice in spot function: " + songChoice);
 
     //    spotify.search({ type: 'track', query: 'dancing in the moonlight' }, function(err, data) {
-    spotify.search({ type: 'track', query: queryStr}, function(err, data) {
-      console.log("err " + err);
+    spotify.search({ type: 'track', query: songChoice}, function(err, data) {
+      console.log("is there and err? " + err);
       if (err || data.tracks.items.length <=0) { // in search of any song is bad
-        queryStr = "the ace of base"; 
-        console.log("Made the ace of base the queryStr: " + queryStr);
-        spotify.search({ type: 'track', query: queryStr}, function(err, data) {
+        songChoice = "the ace of base"; 
+        console.log("Made the ace of base the songChoice: " + songChoice);
+        spotify.search({ type: 'track', query: songChoice}, function(err, data) {
           if (err || data.tracks.items.length <=0) { // in search of the ace of base/err
-            console.log('Error occurred in searching for song: ' + queryStr);
-            return;
+              console.log('Error occurred in searching for song: ' + songChoice);
+              return;
           }
           else { // in search of ace of base is good
-//            getSongInfo();
+//            getSongInfo(data);
 
-              console.log("data.tracks.items.length: " + data.tracks.items.length);
-              for (var i=0; i<data.tracks.items.length; i++) {
+              console.log("ACE: data.tracks.items.length: " + data.tracks.items.length);
+              if (data.tracks.items.length >=5){
+                maxNumOfSongs = 5;
+              }
+              else {
+                maxNumOfSongs = data.tracks.items.length;
+              }
+              console.log("maxNumOfSongs: " + maxNumOfSongs);
+    //        getSongInfo(data);
+              for (var i=0; i<maxNumOfSongs; i++) {
+                // delimeter string
+        //        songIntro = "\nSong you chose: ";
+          //      writeToLogAndConsole(songIntro);
                 // Artist name
-                writeStuff = " Artist Name: data.tracks.items[i].album.artists[0].name: " + data.tracks.items[i].album.artists[0].name + delimiterWrite;
-                writeToLogAndConsole(writeStuff);
+                artistName = "\n\n Artist Name: " + data.tracks.items[i].album.artists[0].name + delimiterWrite;
+                writeToLogAndConsole(artistName);
                 // Preview link
-                writeStuff = " Preview link: data.tracks.items[i].preview_url: " + data.tracks.items[i].preview_url + delimiterWrite;
-                writeToLogAndConsole(writeStuff);
+                previewLink = " Preview link: " + data.tracks.items[i].preview_url + delimiterWrite;
+                writeToLogAndConsole(previewLink);
                 // Name of the song (specifically)
-                writeStuff = " Name of the Song: data.tracks.items[i].name: " + data.tracks.items[i].name + delimiterWrite;
-                writeToLogAndConsole(writeStuff);
+                nameOfSong = " Name of the Song: " + data.tracks.items[i].name + delimiterWrite;
+                writeToLogAndConsole(nameOfSong);
                 // Name of the Album the song is from 
-                writeStuff = " Album Name: data.tracks.items[i].album.name: " + data.tracks.items[i].album.name + delimiterWrite;
-                writeToLogAndConsole(writeStuff);
-              }; // end of for loop
-
-
+                albumName = " Album Name: " + data.tracks.items[i].album.name + delimiterWrite;
+                writeToLogAndConsole(albumName);
+              } // end of for loop
           }  // end of else of if (err) // in search of the ace of base
-        }); // end of spotify search function
+        }); // end of spotify search function (inside search)
         return;
         console.log("near return");
-      }  // end of if in search of any song
-      else {  // if you find the song
-          console.log("data.tracks.items.length: " + data.tracks.items.length);
+      }  // end of if in search of any song is in err
+      else {  // if you find the original songChoice (no err)
 
-//        getSongInfo();
-          for (var i=0; i<data.tracks.items.length; i++) {
+          console.log("Good: data.tracks.items.length: " + data.tracks.items.length);
+          if (data.tracks.items.length >=5){
+            maxNumOfSongs = 5;
+          }
+          else {
+            maxNumOfSongs = data.tracks.items.length;
+          }
+          console.log("maxNumOfSongs: " + maxNumOfSongs);
+//        getSongInfo(data);
+          for (var i=0; i<maxNumOfSongs; i++) {
+            // delimeter string
+      //      songIntro = "\nSong you chose: ";
+      //      writeToLogAndConsole(songIntro);
             // Artist name
-            writeStuff = "\nArtist Name: data.tracks.items[i].album.artists[0].name: " + data.tracks.items[i].album.artists[0].name + delimiterWrite;
-            writeToLogAndConsole(writeStuff);
+            artistName = "\n\n Artist Name: " + data.tracks.items[i].album.artists[0].name + delimiterWrite;
+            writeToLogAndConsole(artistName);
             // Preview link
-            writeStuff = "Preview link: data.tracks.items[i].preview_url: " + data.tracks.items[i].preview_url + delimiterWrite;
-            writeToLogAndConsole(writeStuff);
+            previewLink = " Preview link: " + data.tracks.items[i].preview_url + delimiterWrite;
+            writeToLogAndConsole(previewLink);
             // Name of the song (specifically)
-            writeStuff = "Name of the Song: data.tracks.items[i].name: " + data.tracks.items[i].name + delimiterWrite;
-            writeToLogAndConsole(writeStuff);
+            nameOfSong = " Name of the Song: " + data.tracks.items[i].name + delimiterWrite;
+            writeToLogAndConsole(nameOfSong);
             // Name of the Album the song is from 
-            writeStuff = "Album Name: data.tracks.items[i].album.name: " + data.tracks.items[i].album.name + delimiterWrite;
-            writeToLogAndConsole(writeStuff);
+            albumName = " Album Name: " + data.tracks.items[i].album.name + delimiterWrite;
+            writeToLogAndConsole(albumName);
           }; // end of for loop
 
-      }  // end of else of if (err)
-    }); // end of spotify search function
+      }  // end of else of if (err) which is (no err)
+    }); // end of spotify search function (outside)
 //////////////  }  // end of if queryStr is not blank
   return;
 }  // end of spot function
-/*
-function getSongInfo() {
-  console.log("data.tracks.items.length: " + data.tracks.items.length);
-  for (var i=0; i<data.tracks.items.length; i++) {
-    //console.log("Spotify data.tracks.items[i].album: ", data.tracks.items[i].album);
-    //console.log("Spotify data.tracks.items[i].album.artists[0].external_urls: \n", data.tracks.items[i].album.artists[0].external_urls);
-    // Artist name
-  }; // end of for loop
-}  // end of getSongInfo function
-*/
-function movies() {
+
+function movies(movieChoice) {
 	console.log("in movies function");
-
-  if (process.argv[3]) { 
-     console.log("queryStr is populated.");
-    // Take in the command line arguments
-    var nodeArgs = process.argv;
-
-    // Create an empty string for holding the queryStr
-    var queryStr = "";
-
-    // Capture all the words in the queryStr (ignoring 1st three arguments 0,1,2)
-    for (var i = 3; i < nodeArgs.length; i++) {
-      // Build a string with the queryStr
-      queryStr = queryStr + " " + nodeArgs[i];
-    }
-//    console.log("queryStr: **********" + queryStr + " **********");
 // Then run a request to the OMDB API with the movie specified
-    request("http://www.omdbapi.com/?t=" + queryStr + "&y=&plot=short&r=json", function(error, response, body) {
-      if (!error && response.statusCode === 200) {
- //      console.log("THIS IS THE (body): ", JSON.parse(body));
-        writeStuff = "\nThe following is about the movie you chose: ";
-        writeToLogAndConsole(writeStuff);
-        // * Title of the movie.
-        writeStuff = " Title: " + JSON.parse(body).Title + delimiterWrite;
-        writeToLogAndConsole(writeStuff);
-        // * Year the movie came out.
-        writeStuff = " Year: " + JSON.parse(body).Year + delimiterWrite;
-        writeToLogAndConsole(writeStuff);
-        // * IMDB Rating of the movie.
-        writeStuff = " Rating: " + JSON.parse(body).Ratings[0].Value + delimiterWrite;
-        writeToLogAndConsole(writeStuff);
-        // * Country where the movie was produced.
-        writeStuff = " Country: " + JSON.parse(body).Country + delimiterWrite;
-        writeToLogAndConsole(writeStuff);
-        // * Language of the movie.
-        writeStuff = " Language: " + JSON.parse(body).Language + delimiterWrite;
-        writeToLogAndConsole(writeStuff);
-        // * Plot of the movie.
-        writeStuff = " Plot: " + JSON.parse(body).Plot + delimiterWrite;
-        writeToLogAndConsole(writeStuff);
-        // * Actors in the movie.
-        writeStuff = " Actors: " + JSON.parse(body).Actors + delimiterWrite;
-        writeToLogAndConsole(writeStuff);
-        // * Rotten Tomatoes Rating.
+  request("http://www.omdbapi.com/?t=" + movieChoice + "&y=&plot=short&r=json", function(error, response, body) {
+    if (!error && response.statusCode === 200) {
+//      console.log("THIS IS THE (body): ", JSON.parse(body));
+      // delimeter string
+ //     movieIntro = "\nThe following is about the movie you chose: ";
+ //     writeToLogAndConsole(movieIntro);
+      // * Title of the movie.
+      movieTitle = "\n\n Title: " + JSON.parse(body).Title + delimiterWrite;
+      writeToLogAndConsole(movieTitle);
+      // * Year the movie came out.
+      movieYear = "\n Year: " + JSON.parse(body).Year + delimiterWrite;
+      writeToLogAndConsole(movieYear);
+      // * IMDB Rating of the movie.
+      movieRating = "\n Rating: " + JSON.parse(body).Ratings[0].Value + delimiterWrite;
+      writeToLogAndConsole(movieRating);
+      // * Country where the movie was produced.
+      movieCountry = "\n Country: " + JSON.parse(body).Country + delimiterWrite;
+      writeToLogAndConsole(movieCountry);
+      // * Language of the movie.
+      movieLang = "\n Language: " + JSON.parse(body).Language + delimiterWrite;
+      writeToLogAndConsole(movieLang);
+      // * Plot of the movie.
+      moviePlot = "\n Plot: " + JSON.parse(body).Plot + delimiterWrite;
+      writeToLogAndConsole(moviePlot);
+      // * Actors in the movie.
+      movieActors = "\n Actors: " + JSON.parse(body).Actors + delimiterWrite;
+      writeToLogAndConsole(movieActors);
+      // * Rotten Tomatoes Rating.
 //        .
-        // * Rotten Tomatoes URL
+      // * Rotten Tomatoes URL
 //        .
-      } // end of if 
-      else 
-      {
-        console.log("Movie not found or not entered. ");
-        queryStr = "Mr Nobody";
-        request("http://www.omdbapi.com/?t=" + queryStr + "&y=&plot=short&r=json", function(error, response, body) {
-            if (!error && response.statusCode === 200) {
+    } // end of if 
+    else 
+    {
+      console.log("Movie not found or not entered. ");
+      movieChoice = "Mr Nobody";
+      request("http://www.omdbapi.com/?t=" + movieChoice + "&y=&plot=short&r=json", function(error, response, body) {
+          if (!error && response.statusCode === 200) {
 
-              writeStuff = "\nThe following is about the movie you chose: ";
-              writeToLogAndConsole(writeStuff);
-              // * Title of the movie.
-              writeStuff = " Title: " + JSON.parse(body).Title + delimiterWrite;
-              writeToLogAndConsole(writeStuff);
-              // * Year the movie came out.
-              writeStuff = " Year: " + JSON.parse(body).Year + delimiterWrite;
-              writeToLogAndConsole(writeStuff);
-              // * IMDB Rating of the movie.
-              writeStuff = " Rating: " + JSON.parse(body).Ratings[0].Value + delimiterWrite;
-              writeToLogAndConsole(writeStuff);
-              // * Country where the movie was produced.
-              writeStuff = " Country: " + JSON.parse(body).Country + delimiterWrite;
-              writeToLogAndConsole(writeStuff);
-              // * Language of the movie.
-              writeStuff = " Language: " + JSON.parse(body).Language + delimiterWrite;
-              writeToLogAndConsole(writeStuff);
-              // * Plot of the movie.
-              writeStuff = " Plot: " + JSON.parse(body).Plot + delimiterWrite;
-              writeToLogAndConsole(writeStuff);
-              // * Actors in the movie.
-              writeStuff = " Actors: " + JSON.parse(body).Actors + delimiterWrite;
-              writeToLogAndConsole(writeStuff);
-              // * Rotten Tomatoes Rating.
-      //        .
-              // * Rotten Tomatoes URL
-      //        .
-            } // end of if
-          }) // end of one of the request functions
-      }  // end of else 
-    })  // end of one of the request functions
-  }  // end of if process.argv[3] ... if moveName is populated
-  else {
-    console.log('Error occurred in searching for movie: ' + queryStr);
-    return;
-  }
-  return;
-}; // end of movies function
-
-//function doWhat() {
-
-//	console.log("in doWhat function");
-//  readRandom();
-//  readingFromFile = false;
-//  console.log("readingFrom File is now false,");
-//  console.log("below readRandom but before return of doWhat");
-//  return; 
-//};  // end of doWhat function
-
+     //       intro = "\nThe following is about the movie you chose: ";
+       //     writeToLogAndConsole(intro);
+            // * Title of the movie.
+            title = "\n\n Title: " + JSON.parse(body).Title + delimiterWrite;
+            writeToLogAndConsole(title);
+            // * Year the movie came out.
+            year = "\n Year: " + JSON.parse(body).Year + delimiterWrite;
+            writeToLogAndConsole(year);
+            // * IMDB Rating of the movie.
+            rating = "\n Rating: " + JSON.parse(body).Ratings[0].Value + delimiterWrite;
+            writeToLogAndConsole(rating);
+            // * Country where the movie was produced.
+            country = "\n Country: " + JSON.parse(body).Country + delimiterWrite;
+            writeToLogAndConsole(country);
+            // * Language of the movie.
+            language = "\n Language: " + JSON.parse(body).Language + delimiterWrite;
+            writeToLogAndConsole(language);
+            // * Plot of the movie.
+            plot = "\n Plot: " + JSON.parse(body).Plot + delimiterWrite;
+            writeToLogAndConsole(plot);
+            // * Actors in the movie.
+            actors = "\n Actors: " + JSON.parse(body).Actors + delimiterWrite;
+            writeToLogAndConsole(actors);
+            // * Rotten Tomatoes Rating.
+    //        .
+            // * Rotten Tomatoes URL
+    //        .
+          } // end of if
+        }) // end of one of the request functions
+    }  // end of else 
+  }); // end of one of the request functions
+};  // end of movies function
 
 function writeToLogAndConsole(writeStuff) {
  // Creates and appends/prints to a file called "log.txt".
@@ -372,9 +302,10 @@ function writeToLogAndConsole(writeStuff) {
     console.log("log.txt was updated.");
 
   });  // end of writeTxtFile
+  return;
 }; // end of writeLogAndConsole function
 
-function readRandom(action, value) {
+function readRandom() {
   console.log("Inside of function readRandom");
 
   fs.readFile("random.txt", "utf8", function(error, data) {
@@ -385,19 +316,21 @@ function readRandom(action, value) {
     if (error) throw error;
     //data = data.split(delimiter);
     console.log("data: ", data);
+
+// split the words by the delimeter established in the variable (var) section
     dataOne = data.split(delimiterOne);
     console.log("dataOne: ", dataOne);
 
-    console.log(" dataOne[0]/action: " + dataOne[0]);
-    console.log(" dataOne[1]/value: " + dataOne[1]);
-    var actionToDo = dataOne[0];
-    var action = dataOne[0];
-    var valueToDo = dataOne[1];
-    var value = dataOne[1];
+    console.log(" dataOne[0]/command: " + dataOne[0]);
+    console.log(" dataOne[1]/movieOrSongStr: " + dataOne[1]);
 
-    console.log(" actions: " + action + " "  + actionToDo);
-    console.log(" values: " + value + " "  + valueToDo);
+//    var actionToDo = dataOne[0];
+//    var valueToDo = dataOne[1];
 
+//    console.log(" actions: " + action + " "  + actionToDo);
+//    console.log(" values: " + value + " "  + valueToDo);
+
+    decideSwitch(dataOne[0], dataOne[1]);
 /*
     if ((valueToDo == "do-what-it-says") || (valueToDo == "do")) {
       throw error;
@@ -411,6 +344,6 @@ function readRandom(action, value) {
     }
 */
   }) // end of readFile
-  return action, value;
+  return;
 // end of readRandom function following this line
-} // end
+};
